@@ -40,27 +40,6 @@
         "description": "Object Id of the Azure Websites RP",
         "environmentVariable": "microsoftAzureWebsitesRPObjectId"
       }
-    },
-    "microsoftAzureFrontDoorObjectId": {
-      "type": "string",
-      "metadata": {
-        "description": "Object Id for the Azure Front Door service",
-        "environmentVariable": "microsoftAzureFrontDoorObjectId"
-      }
-    },
-    "backupManagementServiceObjectId": {
-      "type": "string",
-      "metadata": {
-        "description": "Object Id for the backup management service",
-        "environmentVariable": "backupManagementServiceObjectId"
-      }
-    },
-    "diskEncryptionEnterpriseApplicationObjectId": {
-      "type": "string",
-      "metadata": {
-        "description": "Object Id for the disk Encryption Enterprise Application",
-        "environmentVariable": "diskEncryptionEnterpriseApplicationObjectId"
-      }
     }
   },
   "variables": {
@@ -74,43 +53,6 @@
         "permissions": {
           "secrets": [
             "Get"
-          ]
-        }
-      },
-      {
-        "objectId": "[parameters('microsoftAzureFrontDoorObjectId')]",
-        "tenantId": "[subscription().tenantId]",
-        "permissions": {
-          "secrets": [
-            "Get"
-          ]
-        }
-      },
-      {
-        "objectId": "[parameters('backupManagementServiceObjectId')]",
-        "tenantId": "[subscription().tenantId]",
-        "permissions": {
-          "keys": [
-            "Get",
-            "List",
-            "Backup"
-          ],
-          "secrets": [
-            "Get",
-            "List",
-            "Backup"
-          ]
-        }
-      },
-      {
-        "objectId": "[parameters('diskEncryptionEnterpriseApplicationObjectId')]",
-        "tenantId": "[subscription().tenantId]",
-        "permissions": {
-          "keys": [
-            "WrapKey"
-          ],
-          "secrets": [
-            "Set"
           ]
         }
       },
