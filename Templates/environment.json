@@ -1,0 +1,127 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceEnvironmentName": {
+      "type": "string",
+      "metadata": {
+        "description": "Enviroment Designation"
+      }
+    },
+    "serviceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Service Designation"
+      }
+    },
+    "resourceIdentifier": {
+      "type": "string",
+      "metadata": {
+        "description": "4 Letter Service Reference to Identify service in same Resource Group"
+      }
+    },
+    "keyVaultSecretCertificateAccessObjectId": {
+      "type": "string",
+      "metadata": {
+        "description": "Object Id of the Azure AD Object you want to grant Key Vault Secret and Certificate access to",
+        "environmentVariable": "keyVaultSecretCertificateAccessObjectId"
+      }
+    },
+    "keyVaultSecretAccessObjectIds": {
+      "type": "array",
+      "metadata": {
+        "description": "Object Ids of the Azure AD Objects you want to grant Key Vault Secret access to",
+        "environmentVariable": "keyVaultSecretAccessObjectIds"
+      }
+    },
+    "microsoftAzureWebsitesRPObjectId": {
+      "type": "string",
+      "metadata": {
+        "description": "Object Id of the Azure Websites RP",
+        "environmentVariable": "microsoftAzureWebsitesRPObjectId"
+      }
+    }
+  },
+  "variables": {
+    "deploymentUrlBase": "https://https://raw.githubusercontent.com/SkillsFundingAgency/tl-platform-building-blocks/master/templates/",
+    "resourceNamePrefix": "[toLower(concat(parameters('serviceName') , parameters('resourceEnvironmentName'), '-', parameters('resourceIdentifier')))]",
+    "keyVaultName": "[concat(variables('resourceNamePrefix'),'-kv')]",
+    "keyVaultAccessPolicies": [
+      {
+        "objectId": "[parameters('microsoftAzureWebsitesRPObjectId')]",
+        "tenantId": "[subscription().tenantId]",
+        "permissions": {
+          "secrets": [
+            "Get"
+          ]
+        }
+      },
+      {
+        "objectId": "[parameters('keyVaultSecretCertificateAccessObjectId')]",
+        "tenantId": "[subscription().tenantId]",
+        "permissions": {
+          "secrets": [
+            "Get",
+            "List",
+            "Set"
+          ],
+          "certificates": [
+            "Get",
+            "List",
+            "Create",
+            "GetIssuers",
+            "ListIssuers"
+          ]
+        }
+      }
+    ],
+    "copy": [
+      {
+        "name": "parameterKeyVaultSecretAccessPolicies",
+        "count": "[length(parameters('keyVaultSecretAccessObjectIds'))]",
+        "input": {
+          "objectId": "[parameters('keyVaultSecretAccessObjectIds')[copyIndex('parameterKeyVaultSecretAccessPolicies')]]",
+          "tenantId": "[subscription().tenantId]",
+          "permissions": {
+            "secrets": [
+              "Get",
+              "List",
+              "Set"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-05-10",
+      "name": "key-vault",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('deploymentUrlBase'),'keyvault.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "keyVaultName": {
+            "value": "[variables('keyVaultName')]"
+          },
+          "keyVaultAccessPolicies": {
+            "value": "[concat(variables('KeyVaultAccessPolicies'), variables('parameterKeyVaultSecretAccessPolicies'))]"
+          },
+          "enabledForDiskEncryption": {
+            "value": true
+          },
+          "enabledForTemplateDeployment": {
+            "value": true
+          },
+          "enableSoftDelete": {
+            "value": true
+          }
+        }
+      }
+    }
+  ]
+}
