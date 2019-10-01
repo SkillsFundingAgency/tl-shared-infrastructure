@@ -23,7 +23,7 @@ steps:
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
   inputs:
     Contents: |
-     azure/**
+     Templates/**
     TargetFolder: '$(build.artifactstagingdirectory)'
     OverWrite: true
 
