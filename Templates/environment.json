@@ -40,6 +40,13 @@
         "description": "Object Id of the Azure Websites RP",
         "environmentVariable": "microsoftAzureWebsitesRPObjectId"
       }
+    },
+      "keyVaultCertificateAccessObjectId": {
+      "type": "string",
+      "metadata": {
+        "description": "Object Id of the Azure Websites RP",
+        "environmentVariable": "Object Id of the Azure AD Object you want to grant Key Vault Secret and Certificate access toObject Id of the Azure AD Object you want to grant Certificate access to"
+      }
     }
   },
   "variables": {
@@ -58,6 +65,24 @@
       },
       {
         "objectId": "[parameters('keyVaultSecretCertificateAccessObjectId')]",
+        "tenantId": "[subscription().tenantId]",
+        "permissions": {
+          "secrets": [
+            "Get",
+            "List",
+            "Set"
+          ],
+          "certificates": [
+            "Get",
+            "List",
+            "Create",
+            "GetIssuers",
+            "ListIssuers"
+          ]
+        }
+      },
+          {
+        "objectId": "[parameters('keyVaultCertificateAccessObjectId')]",
         "tenantId": "[subscription().tenantId]",
         "permissions": {
           "secrets": [
