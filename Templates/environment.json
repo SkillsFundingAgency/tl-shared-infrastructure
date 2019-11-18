@@ -24,6 +24,10 @@
       "type": "string",
       "defaultValue": "West Europe"
     },
+    "sqlServerLocation": {
+      "type": "string",
+      "defaultValue": ""
+    },
     "keyVaultSecretCertificateAccessObjectId": {
       "type": "string",
       "metadata": {
@@ -313,7 +317,7 @@
             "value": "[variables('sqlServerName')]"
           },
           "sqlServerLocation": {
-            "value": "[parameters('location')]"
+            "value": "[parameters('sqlServerLocation')]"
           },
           "sqlServerAdminUserName": {
             "value": "[concat('tl', uniqueString(resourceGroup().id, guid(variables('sqlServerName'))))]"
