@@ -316,9 +316,6 @@
           "sqlServerName": {
             "value": "[variables('sqlServerName')]"
           },
-          "sqlServerLocation": {
-            "value": "[parameters('sqlServerLocation')]"
-          },
           "sqlServerAdminUserName": {
             "value": "[concat('tl', uniqueString(resourceGroup().id, guid(variables('sqlServerName'))))]"
           },
