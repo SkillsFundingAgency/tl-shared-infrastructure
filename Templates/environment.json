@@ -62,6 +62,12 @@
         "description": "An array of the blob container names to deploy to the shared storage account."
       }
     },
+    "configStorageAccountContainerArray": {
+      "type": "array",
+      "metadata": {
+        "description": "An array of the blob container names to deploy to the config storage account."
+      }
+    },
     "sqlAdminPasswordSeed": {
       "type": "securestring",
       "metadata": {
@@ -103,6 +109,7 @@
     "deploymentUrlBase": "https://raw.githubusercontent.com/SkillsFundingAgency/tl-platform-building-blocks/master/templates/",
     "resourceNamePrefix": "[toLower(concat(parameters('serviceName') , parameters('resourceEnvironmentName'), '-', parameters('resourceIdentifier')))]",
     "sharedARMStorageName": "[concat(replace(variables('resourceNamePrefix'), '-',''), 'str')]",
+    "configStorageAccount": "[concat(replace(variables('resourceNamePrefix'), '-',''), 'configstr')]",
     "sqlServerName": "[toLower(concat(variables('resourceNamePrefix'),'-shared-sql'))]",
     "keyVaultName": "[concat(variables('resourceNamePrefix'),'-kv')]",
     "appServicePlanName": "[concat(variables('resourceNamePrefix'),'-asp')]",
@@ -288,6 +295,54 @@
           },
           "containerName": {
             "value": "[parameters('sharedStorageAccountContainerArray')[copyIndex()]]"
+          },
+          "publicAccess": {
+            "value": "None"
+          }
+        }
+      },
+      "copy": {
+        "name": "sharedstorageaccountcontainercopy",
+        "count": "[length(parameters('sharedStorageAccountContainerArray'))]"
+      },
+      "dependsOn": [
+        "arm-shared-storage"
+      ]
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "config-storage",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('deploymentUrlBase'),'storage-account-arm.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageAccountName": {
+            "value": "[variables('configStorageAccount')]"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "[concat('config-storage-account-container', parameters('configStorageAccountContainerArray')[copyIndex()])]",
+      "type": "Microsoft.Resources/deployments",
+      "condition": "[greater(length(parameters('configStorageAccountContainerArray')), 0)]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('deploymentUrlBase'), 'storage-container.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageAccountName": {
+            "value": "[variables('configStorageAccount')]"
+          },
+          "containerName": {
+            "value": "[parameters('configStorageAccountContainerArray')[copyIndex()]]"
           },
           "publicAccess": {
             "value": "None"
