@@ -354,7 +354,7 @@
         "count": "[length(parameters('sharedStorageAccountContainerArray'))]"
       },
       "dependsOn": [
-        "arm-shared-storage"
+        "config-storage"
       ]
     },
     {
