@@ -1,4 +1,3 @@
-name: tl-shared-service
 trigger:
   batch: true
   branches:
@@ -19,6 +18,9 @@ pool:
   vmImage: 'ubuntu-16.04'
 
 steps:
+- task: gittools.gitversion.gitversion-task.GitVersion@5
+  displayName: GitVersion
+
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
   inputs:
