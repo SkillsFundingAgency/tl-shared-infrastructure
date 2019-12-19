@@ -389,7 +389,9 @@
         }
       },
       "dependsOn": [
-        "arm-shared-storage"
+        "arm-shared-storage",
+        "[concat('sql-server-key-vault-secrets-', parameters('resourceEnvironmentName'))]"
+
       ]
     },
        {
