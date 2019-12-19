@@ -298,7 +298,7 @@
         "count": "[length(parameters('configurationStorageAccountContainerArray'))]"
       },
       "dependsOn": [
-        "config-storage"
+        "config-storage-account"
       ]
     },
     {
