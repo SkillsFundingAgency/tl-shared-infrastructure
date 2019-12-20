@@ -340,7 +340,12 @@
             "value": "[concat('tl', uniqueString(resourceGroup().id, guid(variables('sqlServerName'))))]"
           },
           "sqlServerAdminPassword": {
-            "value": "[parameters('sqlServerAdminPassword')]"
+            "reference": {
+              "keyVault": {
+                "id": "[reference('key-vault').outputs.keyVaultResourceId.value]"
+              },
+              "secretName": "[variables('sqlServerName')]"
+            }
           },
           "sqlServerActiveDirectoryAdminLogin": {
             "value": "[parameters('sqlServerActiveDirectoryAdminLogin')]"
@@ -357,7 +362,8 @@
         }
       },
       "dependsOn": [
-        "arm-shared-storage"
+        "arm-shared-storage",
+        "[concat('sql-server-key-vault-secrets-', parameters('resourceEnvironmentName'))]"
       ]
     },
        {
