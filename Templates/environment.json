@@ -20,14 +20,6 @@
         "description": "4 Letter Service Reference to Identify service in same Resource Group"
       }
     },
-    "location": {
-      "type": "string",
-      "defaultValue": "West Europe"
-    },
-    "sqlServerLocation": {
-      "type": "string",
-      "defaultValue": ""
-    },
     "keyVaultSecretCertificateAccessObjectId": {
       "type": "string",
       "metadata": {
@@ -62,11 +54,17 @@
         "description": "An array of the blob container names to deploy to the shared storage account."
       }
     },
-    "sqlAdminPasswordSeed": {
+    "configurationStorageAccountContainerArray": {
+      "type": "array",
+      "metadata": {
+        "description": "An array of the blob container names to deploy to the shared configuration storage account."
+      }
+    },
+    "sqlServerAdminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "The seed used to generate passwords for sql server deployments.",
-        "environmentVariable": "sqlAdminPasswordSeed"
+        "description": "The Sql Server Admin Password",
+        "environmentVariable": "sqlServerAdminPassword"
       }
     },
     "sqlServerActiveDirectoryAdminLogin": {
@@ -103,7 +101,8 @@
     "deploymentUrlBase": "https://raw.githubusercontent.com/SkillsFundingAgency/tl-platform-building-blocks/master/templates/",
     "resourceNamePrefix": "[toLower(concat(parameters('serviceName') , parameters('resourceEnvironmentName'), '-', parameters('resourceIdentifier')))]",
     "sharedARMStorageName": "[concat(replace(variables('resourceNamePrefix'), '-',''), 'str')]",
-    "sqlServerName": "[toLower(concat(variables('resourceNamePrefix'),'-shared-sql'))]",
+    "configurationStorageName": "[concat(replace(variables('resourceNamePrefix'), '-',''), 'configstr')]",
+    "sqlServerName": "[toLower(concat(variables('resourceNamePrefix'),'-sql'))]",
     "keyVaultName": "[concat(variables('resourceNamePrefix'),'-kv')]",
     "appServicePlanName": "[concat(variables('resourceNamePrefix'),'-asp')]",
     "keyVaultAccessPolicies": [
@@ -171,33 +170,6 @@
       }
     ]
   },
-   "functions": [
-    {
-      "namespace": "blocks",
-      "members": {
-        "getPasswordFromSeed": {
-          "parameters": [
-            {
-              "name": "seed",
-              "type": "string"
-            },
-            {
-              "name": "name",
-              "type": "string"
-            },
-            {
-              "name": "environment",
-              "type": "string"
-            }
-          ],
-          "output": {
-            "type": "string",
-            "value": "[concat(toUpper(substring(parameters('environment'),0,1)), uniqueString(resourceGroup().id, parameters('name'), parameters('seed')), toLower(parameters('environment')), '!')]"
-          }
-        }
-      }
-    }
-  ],
   "resources": [
     {
       "apiVersion": "2017-05-10",
@@ -243,15 +215,63 @@
             "value": "[variables('keyVaultName')]"
           },
           "secretName": {
-            "value": "[concat('tl', uniqueString(resourceGroup().id, guid(variables('sqlServerName'))))]"
+            "value": "[variables('sqlServerName')]"
           },
           "secretValue": {
-            "value": "[blocks.getPasswordFromSeed(parameters('sqlAdminPasswordSeed'), variables('sqlServerName'), uniqueString(parameters('resourceEnvironmentName')))]"
+            "value": "[parameters('sqlServerAdminPassword')]"
           }
         }
       },
       "dependsOn": [
         "key-vault"
+      ]
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "config-storage-account",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('deploymentUrlBase'),'storage-account-arm.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageAccountName": {
+            "value": "[variables('configurationStorageName')]"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "[concat('config-storage-account-container', parameters('configurationStorageAccountContainerArray')[copyIndex()])]",
+      "type": "Microsoft.Resources/deployments",
+      "condition": "[greater(length(parameters('configurationStorageAccountContainerArray')), 0)]",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('deploymentUrlBase'), 'storage-container.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "storageAccountName": {
+            "value": "[variables('configurationStorageName')]"
+          },
+          "containerName": {
+            "value": "[parameters('configurationStorageAccountContainerArray')[copyIndex()]]"
+          },
+          "publicAccess": {
+            "value": "None"
+          }
+        }
+      },
+      "copy": {
+        "name": "configstorageaccountcontainercopy",
+        "count": "[length(parameters('configurationStorageAccountContainerArray'))]"
+      },
+      "dependsOn": [
+        "config-storage-account"
       ]
     },
     {
@@ -324,7 +344,7 @@
               "keyVault": {
                 "id": "[reference('key-vault').outputs.keyVaultResourceId.value]"
               },
-              "secretName": "[concat('tl', uniqueString(resourceGroup().id, guid(variables('sqlServerName'))))]"
+              "secretName": "[variables('sqlServerName')]"
             }
           },
           "sqlServerActiveDirectoryAdminLogin": {
@@ -342,7 +362,8 @@
         }
       },
       "dependsOn": [
-        "arm-shared-storage"
+        "arm-shared-storage",
+        "[concat('sql-server-key-vault-secrets-', parameters('resourceEnvironmentName'))]"
       ]
     },
        {
