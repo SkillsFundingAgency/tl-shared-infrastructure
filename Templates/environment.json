@@ -60,11 +60,11 @@
         "description": "An array of the blob container names to deploy to the shared configuration storage account."
       }
     },
-    "sqlAdminPasswordSeed": {
+    "sqlServerAdminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "The seed used to generate passwords for sql server deployments.",
-        "environmentVariable": "sqlAdminPasswordSeed"
+        "description": "The Sql Server Admin Password",
+        "environmentVariable": "sqlServerAdminPassword"
       }
     },
     "sqlServerActiveDirectoryAdminLogin": {
@@ -170,33 +170,6 @@
       }
     ]
   },
-   "functions": [
-    {
-      "namespace": "blocks",
-      "members": {
-        "getPasswordFromSeed": {
-          "parameters": [
-            {
-              "name": "seed",
-              "type": "string"
-            },
-            {
-              "name": "name",
-              "type": "string"
-            },
-            {
-              "name": "environment",
-              "type": "string"
-            }
-          ],
-          "output": {
-            "type": "string",
-            "value": "[concat(toUpper(substring(parameters('environment'),0,1)), uniqueString(resourceGroup().id, parameters('name'), parameters('seed')), toLower(parameters('environment')), '!')]"
-          }
-        }
-      }
-    }
-  ],
   "resources": [
     {
       "apiVersion": "2017-05-10",
@@ -245,7 +218,7 @@
             "value": "[variables('sqlServerName')]"
           },
           "secretValue": {
-            "value": "[blocks.getPasswordFromSeed(parameters('sqlAdminPasswordSeed'), variables('sqlServerName'), uniqueString(parameters('resourceEnvironmentName')))]"
+            "value": "[parameters('sqlServerAdminPassword')]"
           }
         }
       },
@@ -367,12 +340,7 @@
             "value": "[concat('tl', uniqueString(resourceGroup().id, guid(variables('sqlServerName'))))]"
           },
           "sqlServerAdminPassword": {
-            "reference": {
-              "keyVault": {
-                "id": "[reference('key-vault').outputs.keyVaultResourceId.value]"
-              },
-              "secretName": "[variables('sqlServerName')]"
-            }
+            "value": "[parameters('sqlServerAdminPassword')]"
           },
           "sqlServerActiveDirectoryAdminLogin": {
             "value": "[parameters('sqlServerActiveDirectoryAdminLogin')]"
@@ -389,8 +357,7 @@
         }
       },
       "dependsOn": [
-        "arm-shared-storage",
-        "[concat('sql-server-key-vault-secrets-', parameters('resourceEnvironmentName'))]"
+        "arm-shared-storage"
       ]
     },
        {
