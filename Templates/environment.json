@@ -385,7 +385,7 @@
         },
         "parameters": {
           "sqlServerFirewallRules": {
-            "value": "[variables('sqlServerFirewallRules')]"
+            "value": "[parameters('sqlServerFirewallRules')]"
           },
           "serverName": {
             "value": "[variables('sqlServerName')]"
