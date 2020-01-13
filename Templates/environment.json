@@ -82,7 +82,7 @@
       }
     },
     "sqlServerFirewallRules": {
-      "type": "object",
+      "type": "array",
       "metadata": {
         "description": "Ip addresses to be whitelisted on the sql erver",
         "environmentVariable": "sqlServerFirewallRules"
