@@ -106,7 +106,7 @@
   },
   "variables": {
     "deploymentUrlBase": "https://raw.githubusercontent.com/SkillsFundingAgency/tl-platform-building-blocks/master/templates/",
-    "resourceNamePrefix": "[toLower(concat(parameters('serviceName') , parameters('resourceEnvironmentName'), '-', parameters('resourceIdentifier')))]",
+    "resourceNamePrefix": "[toLower(concat(parameters('resourceIdentifier') , parameters('resourceEnvironmentName'), '-', parameters('serviceName')))]",
     "sharedARMStorageName": "[concat(replace(variables('resourceNamePrefix'), '-',''), 'str')]",
     "configurationStorageName": "[concat(replace(variables('resourceNamePrefix'), '-',''), 'configstr')]",
     "sqlServerName": "[toLower(concat(variables('resourceNamePrefix'),'-sql'))]",
