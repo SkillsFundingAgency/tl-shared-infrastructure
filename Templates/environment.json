@@ -81,13 +81,6 @@
         "environmentVariable": "sqlServerActiveDirectoryAdminObjectId"
       }
     },
-    "sqlServerFirewallRules": {
-      "type": "array",
-      "metadata": {
-        "description": "Ip addresses to be whitelisted on the sql erver",
-        "environmentVariable": "sqlServerFirewallRules"
-      }
-    },
     "threatDetectionEmailAddress": {
       "type": "string",
       "metadata": {
@@ -371,29 +364,6 @@
       "dependsOn": [
         "arm-shared-storage",
         "[concat('sql-server-key-vault-secrets-', parameters('resourceEnvironmentName'))]"
-      ]
-    },
-    {
-      "apiVersion": "2017-05-10",
-      "name": "sql-server-firewall-rules",
-      "type": "Microsoft.Resources/deployments",
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('deploymentUrlBase'),'sql-server-firewall-rules.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "sqlServerFirewallRules": {
-            "value": "[parameters('sqlServerFirewallRules')]"
-          },
-          "serverName": {
-            "value": "[variables('sqlServerName')]"
-          }
-        }
-      },
-      "dependsOn": [
-        "sql-server"
       ]
     },
     {
