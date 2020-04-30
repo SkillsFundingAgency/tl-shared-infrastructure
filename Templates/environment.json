@@ -2,6 +2,10 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "templatesBaseUri": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/DFE-Digital/login.dfe.infrastructure/master/"
+    },
     "resourceEnvironmentName": {
       "type": "string",
       "metadata": {
@@ -95,7 +99,7 @@
         "size": "2",
         "instances": 2
       }
-    },     
+    },
     "redisCacheSku": {
       "type": "object",
       "defaultValue": "",
@@ -403,22 +407,14 @@
       }
     },
     {
+      "type": "Microsoft.Cache/Redis",
+      "name": "[variables('redisCacheName')]",
       "apiVersion": "2019-07-01",
-      "name": "RedisCache",
-      "type": "Microsoft.Resources/deployments",
+      "location": "[resourceGroup().location]",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('redisTemplateUri')]"
-        },
-        "parameters": {
-          "redisCacheName": {
-            "value": "[variables('redisCacheName')]"
-          },
-          "redisCacheSku": {
-            "value": "[parameters('redisCacheSku')]"
-          }
-        }
+        "sku": "[parameters('redisCacheSku')]",
+        "enableNonSslPort": false,
+        "minimumTlsVersion": "1.2"
       }
     }
   ]
