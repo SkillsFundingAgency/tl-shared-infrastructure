@@ -95,10 +95,7 @@
         "size": "2",
         "instances": 2
       }
-    },
-     "redisCacheName": {
-      "type": "string"
-    },
+    },     
     "redisCacheSku": {
       "type": "object",
       "defaultValue": "",
@@ -114,7 +111,9 @@
     "configurationStorageName": "[concat(replace(variables('resourceNamePrefix'), '-',''), 'configstr')]",
     "sqlServerName": "[toLower(concat(variables('resourceNamePrefix'),'-sql'))]",
     "keyVaultName": "[concat(variables('resourceNamePrefix'),'-kv')]",
+    "redisCacheName": "[concat(variables('resourceNamePrefix'),'-redis')]",
     "appServicePlanName": "[concat(variables('resourceNamePrefix'),'-asp')]",
+
     "redisTemplateUri": "[concat(variables('deploymentUrlBase'), 'redis-cache.json')]",
     "keyVaultAccessPolicies": [
       {
@@ -414,13 +413,13 @@
         },
         "parameters": {
           "redisCacheName": {
-            "value": "[parameters('redisCacheName')]"
+            "value": "[variables('redisCacheName')]"
           },
           "redisCacheSku": {
             "value": "[parameters('redisCacheSku')]"
           }
         }
       }
-    },
+    }
   ]
 }
