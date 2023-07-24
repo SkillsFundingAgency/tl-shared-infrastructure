@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "parameters": {    
+  "parameters": {
     "resourceEnvironmentName": {
       "type": "string",
       "metadata": {
@@ -92,13 +92,13 @@
       "type": "object",
       "defaultValue": {
         "tier": "Standard",
-        "size": "2",
-        "instances": 2
+        "size": "1",
+        "instances": 1
       }
     },
     "redisCacheSku": {
       "type": "object",
-      "defaultValue": "",
+      "defaultValue": {"name": "Basic","family": "C","capacity": 0},
       "metadata": {
         "description": ""
       }
@@ -110,6 +110,8 @@
     "sharedARMStorageName": "[concat(replace(variables('resourceNamePrefix'), '-',''), 'str')]",
     "configurationStorageName": "[concat(replace(variables('resourceNamePrefix'), '-',''), 'configstr')]",
     "sqlServerName": "[toLower(concat(variables('resourceNamePrefix'),'-sql'))]",
+    "replicaResourceNamePrefix": "[toLower(concat(parameters('resourceIdentifier') , parameters('resourceEnvironmentName'), '-replica-', parameters('serviceName')))]",
+    "replicaSqlServerName": "[toLower(concat(variables('replicaResourceNamePrefix'),'-sql'))]",
     "keyVaultName": "[concat(variables('resourceNamePrefix'),'-kv')]",
     "redisCacheName": "[concat(variables('resourceNamePrefix'),'-redis')]",
     "appServicePlanName": "[concat(variables('resourceNamePrefix'),'-asp')]",
@@ -122,42 +124,6 @@
         "permissions": {
           "secrets": [
             "Get"
-          ]
-        }
-      },
-      {
-        "objectId": "[parameters('keyVaultSecretCertificateAccessObjectId')]",
-        "tenantId": "[subscription().tenantId]",
-        "permissions": {
-          "secrets": [
-            "Get",
-            "List",
-            "Set"
-          ],
-          "certificates": [
-            "Get",
-            "List",
-            "Create",
-            "GetIssuers",
-            "ListIssuers"
-          ]
-        }
-      },
-      {
-        "objectId": "[parameters('keyVaultCertificateAccessObjectId')]",
-        "tenantId": "[subscription().tenantId]",
-        "permissions": {
-          "secrets": [
-            "Get",
-            "List",
-            "Set"
-          ],
-          "certificates": [
-            "Get",
-            "List",
-            "Create",
-            "GetIssuers",
-            "ListIssuers"
           ]
         }
       }
@@ -195,9 +161,6 @@
           "keyVaultName": {
             "value": "[variables('keyVaultName')]"
           },
-          "keyVaultAccessPolicies": {
-            "value": "[concat(variables('KeyVaultAccessPolicies'), variables('parameterKeyVaultSecretAccessPolicies'))]"
-          },
           "enabledForDiskEncryption": {
             "value": true
           },
@@ -210,6 +173,32 @@
         }
       }
     },
+    // {
+    //   "apiVersion": "2017-05-10",
+    //   "name": "[concat('sql-server-replica-key-vault-secrets-', parameters('resourceEnvironmentName'))]",
+    //   "type": "Microsoft.Resources/deployments",
+    //   "properties": {
+    //     "mode": "Incremental",
+    //     "templateLink": {
+    //       "uri": "[concat(variables('deploymentUrlBase'),'keyvault-secret.json')]",
+    //       "contentVersion": "1.0.0.0"
+    //     },
+    //     "parameters": {
+    //       "keyVaultName": {
+    //         "value": "[variables('keyVaultName')]"
+    //       },
+    //       "secretName": {
+    //         "value": "[variables('replicaSqlServerName')]"
+    //       },
+    //       "secretValue": {
+    //         "value": "[parameters('sqlServerAdminPassword')]"
+    //       }
+    //     }
+    //   },
+    //   "dependsOn": [
+    //     "key-vault"
+    //   ]
+    // },
     {
       "apiVersion": "2017-05-10",
       "name": "[concat('sql-server-key-vault-secrets-', parameters('resourceEnvironmentName'))]",
@@ -355,6 +344,50 @@
                 "id": "[reference('key-vault').outputs.keyVaultResourceId.value]"
               },
               "secretName": "[variables('sqlServerName')]"
+            }
+          },
+          "sqlServerActiveDirectoryAdminLogin": {
+            "value": "[parameters('sqlServerActiveDirectoryAdminLogin')]"
+          },
+          "sqlServerActiveDirectoryAdminObjectId": {
+            "value": "[parameters('sqlServerActiveDirectoryAdminObjectId')]"
+          },
+          "threatDetectionEmailAddress": {
+            "value": "[parameters('threatDetectionEmailAddress')]"
+          },
+          "sqlStorageAccountName": {
+            "value": "[variables('sharedARMStorageName')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "arm-shared-storage",
+        "[concat('sql-server-key-vault-secrets-', parameters('resourceEnvironmentName'))]"
+      ]
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "sql-server-replica",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('deploymentUrlBase'),'sql-server.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "sqlServerName": {
+            "value": "[variables('replicaSqlServerName')]"
+          },
+          "sqlServerAdminUserName": {
+            "value": "[concat('tl', uniqueString(resourceGroup().id, guid(variables('replicaSqlServerName'))))]"
+          },
+          "sqlServerAdminPassword": {
+            "reference": {
+              "keyVault": {
+                "id": "[reference('key-vault').outputs.keyVaultResourceId.value]"
+              },
+              "secretName": "[variables('replicaSqlServerName')]"
             }
           },
           "sqlServerActiveDirectoryAdminLogin": {
