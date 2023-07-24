@@ -92,13 +92,13 @@
       "type": "object",
       "defaultValue": {
         "tier": "Standard",
-        "size": "1",
-        "instances": 1
+        "size": "2",
+        "instances": 2
       }
     },
     "redisCacheSku": {
       "type": "object",
-      "defaultValue": {"name": "Basic","family": "C","capacity": 0},
+      "defaultValue": "",
       "metadata": {
         "description": ""
       }
